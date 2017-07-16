@@ -1,4 +1,3 @@
-import vutils
 import os, json, logging, zipfile, glob
 import shared
 from subprocess import Popen, CalledProcessError
@@ -55,11 +54,6 @@ def calculate(temp_files, in_temp, stdout_, stderr_, forced=[]):
   # XXX we should disable EMCC_DEBUG when building libs, just like in the relooper
 
   def build_libc(lib_filename, files, lib_opts):
-    # vutils.showCallChain()
-    # print '-'
-    # print lib_filename
-    # print lib_opts
-    # print '-'
     o_s = []
     musl_internal_includes = ['-I', shared.path_from_root('system', 'lib', 'libc', 'musl', 'src', 'internal'), '-I', shared.path_from_root('system', 'lib', 'libc', 'musl', 'arch', 'js')]
     commands = []
@@ -76,6 +70,26 @@ def calculate(temp_files, in_temp, stdout_, stderr_, forced=[]):
     shared.Building.link(o_s, in_temp(lib_filename))
     return in_temp(lib_filename)
 
+  def build_libcxx(src_dirname, lib_filename, files, lib_opts, has_noexcept_version=False):
+    o_s = []
+    commands = []
+    opts = default_opts + lib_opts
+    if has_noexcept_version and shared.Settings.DISABLE_EXCEPTION_CATCHING:
+      opts += ['-fno-exceptions']
+    for src in files:
+      o = in_temp(src + '.o')
+      srcfile = shared.path_from_root(src_dirname, src)
+      commands.append([shared.PYTHON, shared.EMXX, srcfile, '-o', o, '-std=c++11'] + opts)
+      o_s.append(o)
+    run_commands(commands)
+    if lib_filename.endswith('.bc'):
+      shared.Building.link(o_s, in_temp(lib_filename))
+    elif lib_filename.endswith('.a'):
+      shared.Building.emar('cr', in_temp(lib_filename), o_s)
+    else:
+      raise Exception('unknown suffix ' + lib_filename)
+    return in_temp(lib_filename)
+
   # libc
   def create_libc(libname):
     logging.debug(' building libc for cache')
@@ -89,9 +103,6 @@ def calculate(temp_files, in_temp, stdout_, stderr_, forced=[]):
     )
     # TODO: consider using more math code from musl, doing so makes box2d faster
     for dirpath, dirnames, filenames in os.walk(musl_srcdir):
-      print '1' + str(dirpath)
-      print '2' + str(dirnames)
-      print '3' + str(filenames)
       for f in filenames:
         if f.endswith('.c'):
           if f in blacklist: continue
