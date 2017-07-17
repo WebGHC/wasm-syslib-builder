@@ -29,11 +29,8 @@ def main():
             libc_files.append(os.path.join(musl_srcdir, dirpath, f))
 
     #build and execute the command a lot
-    print rootpath
-    exit()
     for f in libc_files:
         objectFile = os.path.basename(f)[:-1]+'o'
-        print objectFile
         cmd = ["clang", "-I", rootpath+"/system/lib/libc/musl/src/internal", "-Os",
         "-Werror=implicit-function-declaration", "-Werror", "-Wno-return-type", "-Wno-parentheses",
         "-Wno-ignored-attributes", "-Wno-shift-count-overflow", "-Wno-shift-negative-value",
