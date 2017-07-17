@@ -56,7 +56,8 @@ def main():
             raise Exception('Command \'%s\' returned non-zero exit status %s' % (' '.join(cmd), proc.returncode))
 
     ar = os.getenv("AR")
-    Popen([ar, "rcs", os.path.join(lib, "libc.a")] + objectListing)
+    arProc = Popen([ar, "rcs", os.path.join(lib, "libc.a")] + objectListing)
+    arProc.communicate()
 
 if __name__ == '__main__':
     main()
