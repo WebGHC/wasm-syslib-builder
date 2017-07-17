@@ -11,8 +11,15 @@ def main():
     rootpath = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
     # abs path to libc code
-    musl_srcdir = os.path.join(rootpath, 'system', 'lib', 'libc', 'musl', 'src')
+    musl_srcdir = os.path.join(rootpath, 'emscripten', 'system', 'lib', 'libc', 'musl', 'src')
 
+    # setup
+    objs = os.path.join(rootpath, "obj")
+    lib = os.path.join(rootpath, "lib")
+    if not os.path.exists(objs):
+        os.makedirs(objs)
+    if not os.path.exists(lib):
+        os.makedirs(lib)
     # get a ton of absolute paths that lead to the files we want to compile
     libc_files = []
     for dirpath, dirnames, filenames in os.walk(musl_srcdir):
@@ -28,19 +35,28 @@ def main():
           if not cancel:
             libc_files.append(os.path.join(musl_srcdir, dirpath, f))
 
+    cc = os.getenv("CC")
+    objectListing = []
     #build and execute the command a lot
     for f in libc_files:
-        objectFile = os.path.basename(f)[:-1]+'o'
-        cmd = ["clang", "-I", rootpath+"/system/lib/libc/musl/src/internal", "-Os",
-        "-Werror=implicit-function-declaration", "-Werror", "-Wno-return-type", "-Wno-parentheses",
+        objectFile = os.path.join(objs, os.path.basename(f)[:-1]+'o')
+        objectListing.append(objectFile)
+        cmd = [cc, "-I", rootpath+"/emscripten/system/lib/libc/musl/src/internal", "-Os",
+        "-Werror=implicit-function-declaration", "-Wno-return-type", "-Wno-parentheses",
         "-Wno-ignored-attributes", "-Wno-shift-count-overflow", "-Wno-shift-negative-value",
-        "-Wno-dangling-else", "-Wno-unknown-pragmas", "-Wno-shift-op-parentheses",
+        "-Wno-dangling-else", "-Wno-unknown-pragmas", "-Wno-shift-op-parentheses", "-D", "__EMSCRIPTEN__",
         "-Wno-string-plus-int", "-Wno-logical-op-parentheses", "-Wno-bitwise-op-parentheses",
-        "-Wno-visibility", "-Wno-pointer-sign", "-isystem"+rootpath+"/system/include",
-        "-isystem"+rootpath+"/system/include/libc", "-isystem"+rootpath+"/system/lib/libc/musl/arch/emscripten",
-        "-o", rootpath+"/build/"+objectFile, f]
+        "-Wno-visibility", "-Wno-pointer-sign", "-isystem"+rootpath+"/emscripten/system/include",
+        "-isystem"+rootpath+"/emscripten/system/include/libc", "-v", "-isystem"+rootpath+"/emscripten/system/lib/libc/musl/arch/emscripten",
+        "-c", "-o", objectFile, f]
+        proc = Popen(cmd, stdout=sys.stdout)
+        proc.communicate()
+        if proc.returncode != 0:
+            # Deliberately do not use CalledProcessError, see issue #2944
+            raise Exception('Command \'%s\' returned non-zero exit status %s' % (' '.join(cmd), proc.returncode))
 
-        Popen(cmd, stdout=sys.stdout)
+    ar = os.getenv("AR")
+    Popen([ar, "rcs", os.path.join(lib, "libc.a")] + objectListing)
 
 if __name__ == '__main__':
     main()
