@@ -1,4 +1,5 @@
 import os, sys
+from subprocess import Popen
 def main():
     # entire libc folders that are ignored
     ignoredModules = ['ipc', 'passwd', 'thread', 'signal', 'sched', 'ipc', 'time', 'linux', 'aio', 'exit', 'legacy', 'mq', 'process', 'search', 'setjmp', 'env', 'ldso', 'conf']
@@ -28,8 +29,21 @@ def main():
             libc_files.append(os.path.join(musl_srcdir, dirpath, f))
 
     #build and execute the command a lot
+    print rootpath
+    exit()
     for f in libc_files:
-        cmd = ["clang", ]
+        objectFile = os.path.basename(f)[:-1]+'o'
+        print objectFile
+        cmd = ["clang", "-I", rootpath+"/system/lib/libc/musl/src/internal", "-Os",
+        "-Werror=implicit-function-declaration", "-Werror", "-Wno-return-type", "-Wno-parentheses",
+        "-Wno-ignored-attributes", "-Wno-shift-count-overflow", "-Wno-shift-negative-value",
+        "-Wno-dangling-else", "-Wno-unknown-pragmas", "-Wno-shift-op-parentheses",
+        "-Wno-string-plus-int", "-Wno-logical-op-parentheses", "-Wno-bitwise-op-parentheses",
+        "-Wno-visibility", "-Wno-pointer-sign", "-isystem"+rootpath+"/system/include",
+        "-isystem"+rootpath+"/system/include/libc", "-isystem"+rootpath+"/system/lib/libc/musl/arch/emscripten",
+        "-o", rootpath+"/"+objectFile, f]
+
+        Popen(cmd, stdout=sys.stdout)
 
 if __name__ == '__main__':
     main()
