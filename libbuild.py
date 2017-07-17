@@ -27,7 +27,9 @@ def main():
           if not cancel:
             libc_files.append(os.path.join(musl_srcdir, dirpath, f))
 
-    
+    #build and execute the command a lot
+    for f in libc_files:
+        cmd = ["clang", ]
 
 if __name__ == '__main__':
     main()
