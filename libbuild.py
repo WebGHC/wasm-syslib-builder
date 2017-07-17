@@ -21,7 +21,7 @@ def main():
     if not os.path.exists(lib):
         os.makedirs(lib)
     # get a ton of absolute paths that lead to the files we want to compile
-    libc_files = []
+    libc_files = [os.path.join(rootpath, "emscripten/system/lib/dlmalloc.c")]
     for dirpath, dirnames, filenames in os.walk(musl_srcdir):
       for f in filenames:
         if f.endswith('.c'):
