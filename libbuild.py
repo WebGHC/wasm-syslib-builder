@@ -41,7 +41,7 @@ def main():
         "-Wno-string-plus-int", "-Wno-logical-op-parentheses", "-Wno-bitwise-op-parentheses",
         "-Wno-visibility", "-Wno-pointer-sign", "-isystem"+rootpath+"/system/include",
         "-isystem"+rootpath+"/system/include/libc", "-isystem"+rootpath+"/system/lib/libc/musl/arch/emscripten",
-        "-o", rootpath+"/"+objectFile, f]
+        "-o", rootpath+"/build/"+objectFile, f]
 
         Popen(cmd, stdout=sys.stdout)
 
