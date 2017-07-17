@@ -7,6 +7,9 @@ def main():
     # specific files that are ignored
     ignoredFiles = ['getaddrinfo.c', 'getnameinfo.c', 'inet_addr.c', 'res_query.c', 'gai_strerror.c', 'proto.c', 'gethostbyaddr.c', 'gethostbyaddr_r.c', 'gethostbyname.c', 'gethostbyname2_r.c', 'gethostbyname_r.c', 'gethostbyname2.c', 'usleep.c', 'alarm.c', 'syscall.c', '_exit.c']
 
+    # questionable math files
+    badMath = ['abs.c', 'sqrt.c', 'sqrtf.c', 'sqrtl.c', 'fabs.c', 'fabsf.c', 'fabsl.c', 'ceil.c', 'ceilf.c', 'ceill.c', 'floor.c', 'floorf.c', 'floorl.c', 'round.c', 'roundf.c']
+
     # abs path to here
     rootpath = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
@@ -20,12 +23,13 @@ def main():
         os.makedirs(objs)
     if not os.path.exists(lib):
         os.makedirs(lib)
+
     # get a ton of absolute paths that lead to the files we want to compile
     libc_files = [os.path.join(rootpath, "emscripten/system/lib/dlmalloc.c")]
     for dirpath, dirnames, filenames in os.walk(musl_srcdir):
       for f in filenames:
         if f.endswith('.c'):
-          if f in ignoredFiles: continue
+          if f in ignoredFiles+badMath: continue
           dir_parts = os.path.split(dirpath)
           cancel = False
           for part in dir_parts:
