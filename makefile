@@ -16,10 +16,20 @@ WASMOBJS := $(addprefix obj/, $(addsuffix .o, $(WASMLIBCNAMES)))
 
 vpath %.c $(sort $(dir $(WASMLIBCFILES)))
 
-obj lib:
+HEADERS := $(shell find ./emscripten/system/include -mindepth 1 -maxdepth 1 -name '*.h') $(shell find ./emscripten/system/include/libc -mindepth 1 -name '*.h') $(shell find ./emscripten/system/lib/libc/musl -mindepth 1 -name '*.h' )
+HEADERHOMES := $(sort $(dir $(subst /lib/libc/musl,, $(subst /emscripten/system,, $(HEADERS) ))))
+
+obj lib include:
 	mkdir $@
 
-$(WASMOBJS): obj/%.o: %.c | obj
+$(HEADERHOMES):
+	mkdir -p ./include/$@
+
+
+$(HEADERS): %.h: %.h | include $(HEADERHOMES)
+	cp $@ ./include/$(subst /lib/libc/musl,, $(subst /emscripten/system,, $@ ))
+
+$(WASMOBJS): obj/%.o: %.c $(HEADERS)| obj
 	@$$CC -I ./emscripten/system/lib/libc/musl/src/internal -Os \
 	-Werror=implicit-function-declaration -Wno-return-type -Wno-parentheses \
 	-Wno-ignored-attributes -Wno-shift-count-overflow -Wno-shift-negative-value \
@@ -39,3 +49,4 @@ all: lib/libc.a
 clean:
 	rm -rf lib
 	rm -rf obj
+	rm -rf include
