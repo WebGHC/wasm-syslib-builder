@@ -10,8 +10,10 @@ PROCESSEDMODULES := $(filter-out $(addprefix %/, $(IGNOREDMODULES)), $(MUSLMODUL
 CANDIDATEFILES := $(foreach module, $(PROCESSEDMODULES), $(shell find $(module) -name '*.c'))
 PATHTODLMALLOC := ./emscripten/system/lib/dlmalloc.c
 WASMLIBCFILES := $(PATHTODLMALLOC) $(filter-out $(addprefix %/, $(IGNOREDFILES)), $(CANDIDATEFILES))
-WASMLIBCBASENAMES := $(notdir $(basename $(WASMLIBCFILES)))
+WASMLIBCNAMES := $(notdir $(basename $(WASMLIBCFILES)))
+WASMOBJS := $(addprefix ./obj/, $(addsuffix .o, $(WASMLIBCNAMES)))
 
+vpath %.c $(sort $(dir $(WASMLIBCFILES)))
 
 test:
 	echo $(words $(CANDIDATEFILES))
@@ -22,13 +24,12 @@ test:
 obj lib:
 	mkdir $@
 
-$(WASMLIBCFILES): ./obj/%.o: %.c
+$(WASMOBJS):./obj/%.o: %.c | obj
+	
 
-libc.a:
 
 .PHONY: all
-all: libc.a | lib obj
-	python libbuild.py
+all: $(WASMOBJS) | obj lib
 
 .PHONY: clean
 clean:
