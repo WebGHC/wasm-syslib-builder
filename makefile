@@ -10,26 +10,30 @@ PROCESSEDMODULES := $(filter-out $(addprefix %/, $(IGNOREDMODULES)), $(MUSLMODUL
 CANDIDATEFILES := $(foreach module, $(PROCESSEDMODULES), $(shell find $(module) -name '*.c'))
 PATHTODLMALLOC := ./emscripten/system/lib/dlmalloc.c
 WASMLIBCFILES := $(PATHTODLMALLOC) $(filter-out $(addprefix %/, $(IGNOREDFILES)), $(CANDIDATEFILES))
+
 WASMLIBCNAMES := $(notdir $(basename $(WASMLIBCFILES)))
-WASMOBJS := $(addprefix ./obj/, $(addsuffix .o, $(WASMLIBCNAMES)))
+WASMOBJS := $(addprefix obj/, $(addsuffix .o, $(WASMLIBCNAMES)))
 
 vpath %.c $(sort $(dir $(WASMLIBCFILES)))
-
-test:
-	echo $(words $(CANDIDATEFILES))
-	echo $(words $(IGNOREDFILES))
-	echo $(words $(WASMLIBCFILES))
-
 
 obj lib:
 	mkdir $@
 
-$(WASMOBJS):./obj/%.o: %.c | obj
-	
+$(WASMOBJS): obj/%.o: %.c | obj
+	@$$CC -I ./emscripten/system/lib/libc/musl/src/internal -Os \
+	-Werror=implicit-function-declaration -Wno-return-type -Wno-parentheses \
+	-Wno-ignored-attributes -Wno-shift-count-overflow -Wno-shift-negative-value \
+	-Wno-dangling-else -Wno-unknown-pragmas -Wno-shift-op-parentheses -D __EMSCRIPTEN__ \
+	-Wno-string-plus-int -Wno-logical-op-parentheses -Wno-bitwise-op-parentheses \
+	-Wno-visibility -Wno-pointer-sign -isystem ./emscripten/system/include -mthread-model single \
+	-isystem ./emscripten/system/include/libc -isystem ./emscripten/system/lib/libc/musl/arch/emscripten \
+	-c -o $@ $<
 
+lib/libc.a: $(WASMOBJS) | lib
+	@$$AR rcs $@ $(WASMOBJS)
 
 .PHONY: all
-all: $(WASMOBJS) | obj lib
+all: lib/libc.a
 
 .PHONY: clean
 clean:
