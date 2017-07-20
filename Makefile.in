@@ -20,11 +20,11 @@ vpath %.c $(sort $(dir $(WASMLIBCFILES)))
 obj lib:
 	mkdir $@
 
-include:
-	mkdir -p $(prefix)/include
+$(prefix)/include:
+	mkdir $(prefix)/include
 
 $(WASMOBJS): obj/%.o: %.c | obj
-	@$$CC -I ./emscripten/system/lib/libc/musl/src/internal -Os \
+	$$CC -I ./emscripten/system/lib/libc/musl/src/internal -Os \
 	-Werror=implicit-function-declaration -Wno-return-type -Wno-parentheses \
 	-Wno-ignored-attributes -Wno-shift-count-overflow -Wno-shift-negative-value \
 	-Wno-dangling-else -Wno-unknown-pragmas -Wno-shift-op-parentheses -D __EMSCRIPTEN__ \
@@ -33,7 +33,7 @@ $(WASMOBJS): obj/%.o: %.c | obj
 	-isystem ./emscripten/system/include/libc -isystem ./emscripten/system/lib/libc/musl/arch/emscripten \
 	-c -o $@ $<
 
-lib/libc.a: $(WASMOBJS) | lib
+$(prefix)/lib/libc.a: $(WASMOBJS) | lib
 	@$$AR rcs $@ $(WASMOBJS)
 
 all: lib/libc.a
@@ -42,14 +42,8 @@ clean:
 	rm -rf lib
 	rm -rf obj
 
-install: lib/libc.a | include
-	cp ./lib/libc.a $(prefix)/
-
-	cd ./emscripten/system/include; cp ./emscripten.h $(prefix)/include/; \
-	cp -R ./libc/ $(prefix)/include/; cp -R ./compat/ $(prefix)/include/; \
-	cp -R ./emscripten $(prefix)/include/;
-	
-	cp -R ./emscripten/system/lib/libc/musl/arch $(prefix)/include/
-
+install: $(prefix)/lib/libc.a | include
+	cp ./lib/libc.a $(prefix)/lib/
+	cp -R ./emscripten/system/include/libc/ $(prefix)/include/; 
 
 .PHONY: all clean install
