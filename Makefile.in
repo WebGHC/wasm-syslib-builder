@@ -1,5 +1,5 @@
-prefix := @prefix@
 .DEFAULT_GOAL := all
+prefix := @prefix@
 
 PATHTOMUSLSRC := ./emscripten/system/lib/libc/musl/src
 MUSLMODULES := $(shell find $(PATHTOMUSLSRC) -mindepth 1 -maxdepth 1 -type d)
