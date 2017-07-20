@@ -1,3 +1,4 @@
+prefix := @prefix@
 .DEFAULT_GOAL := all
 
 PATHTOMUSLSRC := ./emscripten/system/lib/libc/musl/src
