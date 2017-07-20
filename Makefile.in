@@ -1,5 +1,5 @@
-.DEFAULT_GOAL := all
 prefix := @prefix@
+.DEFAULT_GOAL := all
 
 PATHTOMUSLSRC := ./emscripten/system/lib/libc/musl/src
 MUSLMODULES := $(shell find $(PATHTOMUSLSRC) -mindepth 1 -maxdepth 1 -type d)
@@ -30,24 +30,23 @@ $(HEADERHOMES):
 $(HEADERS): %.h: %.h | include $(HEADERHOMES)
 	cp $@ ./include/$(subst /lib/libc/musl,, $(subst /emscripten/system,, $@ ))
 
-$(WASMOBJS): obj/%.o: %.c $(HEADERS)| obj
+$(WASMOBJS): obj/%.o: %.c | obj
 	@$$CC -I ./emscripten/system/lib/libc/musl/src/internal -Os \
 	-Werror=implicit-function-declaration -Wno-return-type -Wno-parentheses \
 	-Wno-ignored-attributes -Wno-shift-count-overflow -Wno-shift-negative-value \
 	-Wno-dangling-else -Wno-unknown-pragmas -Wno-shift-op-parentheses -D __EMSCRIPTEN__ \
 	-Wno-string-plus-int -Wno-logical-op-parentheses -Wno-bitwise-op-parentheses \
-	-Wno-visibility -Wno-pointer-sign -isystem ./emscripten/system/include -mthread-model single \
+	-Wno-visibility -Wno-pointer-sign -isystem ./emscripten/system/include \
 	-isystem ./emscripten/system/include/libc -isystem ./emscripten/system/lib/libc/musl/arch/emscripten \
 	-c -o $@ $<
 
 lib/libc.a: $(WASMOBJS) | lib
 	@$$AR rcs $@ $(WASMOBJS)
 
-.PHONY: all
 all: lib/libc.a
-
-.PHONY: clean
 clean:
 	rm -rf lib
 	rm -rf obj
 	rm -rf include
+
+.PHONY: all clean
