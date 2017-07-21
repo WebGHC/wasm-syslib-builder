@@ -43,6 +43,11 @@ install: lib/libc.a
 	mkdir $(prefix)/lib
 	mkdir $(prefix)/include
 	cp ./lib/libc.a $(prefix)/lib/
-	cp -R ./emscripten/system/include/libc/ $(prefix)/include/;
+	cp ./emscripten/system/include/emscripten.h $(prefix)/include/
+	cp -R ./emscripten/system/include/libc/* $(prefix)/include/
+	rm $(prefix)/include/bits
+	cp -R ./emscripten/system/include/compat/ $(prefix)/include/
+	cp -R ./emscripten/system/include/emscripten $(prefix)/include/
+	cp -R ./emscripten/system/lib/libc/musl/arch/emscripten/* $(prefix)/include/
 
 .PHONY: all clean install
