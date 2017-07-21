@@ -20,12 +20,6 @@ vpath %.c $(sort $(dir $(WASMLIBCFILES)))
 obj lib:
 	mkdir $@
 
-$(prefix)/lib:
-	mkdir $(prefix)/lib
-
-$(prefix)/include:
-	mkdir $(prefix)/include
-
 $(WASMOBJS): obj/%.o: %.c | obj
 	@$$CC -I ./emscripten/system/lib/libc/musl/src/internal -Os \
 	-Werror=implicit-function-declaration -Wno-return-type -Wno-parentheses \
@@ -45,7 +39,9 @@ clean:
 	rm -rf lib
 	rm -rf obj
 
-install: $(prefix)/lib/libc.a | $(prefix)/include
+install: lib/libc.a
+	mkdir $(prefix)/lib
+	mkdir $(prefix)/include
 	cp ./lib/libc.a $(prefix)/lib/
 	cp -R ./emscripten/system/include/libc/ $(prefix)/include/;
 
